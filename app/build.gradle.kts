@@ -1,6 +1,8 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.hilt.android.gradle.plugin)
+    alias(libs.plugins.ksp)
 }
 
 android {
@@ -50,6 +52,9 @@ dependencies {
     implementation(libs.coroutines.android)
     implementation(libs.lifecycle.viewmodel.ktx)
     implementation(libs.okhttp)
+
+    implementation(libs.hilt.android)
+    ksp(libs.hilt.ksp)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
