@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.hilt.android.gradle.plugin)
     alias(libs.plugins.ksp)
+    alias(libs.plugins.kotlinx.serialization)
 }
 
 android {
@@ -52,6 +53,8 @@ dependencies {
     implementation(libs.coroutines.android)
     implementation(libs.lifecycle.viewmodel.ktx)
     implementation(libs.okhttp)
+    implementation(libs.kotlinx.serialization.json)
+    implementation(libs.retrofit.kotlinx.serialization.converter)
 
     implementation(libs.hilt.android)
     ksp(libs.hilt.ksp)
