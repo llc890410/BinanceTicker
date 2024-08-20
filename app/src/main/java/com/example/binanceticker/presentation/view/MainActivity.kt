@@ -1,4 +1,4 @@
-package com.example.binanceticker
+package com.example.binanceticker.presentation.view
 
 import android.os.Bundle
 import androidx.activity.enableEdgeToEdge
