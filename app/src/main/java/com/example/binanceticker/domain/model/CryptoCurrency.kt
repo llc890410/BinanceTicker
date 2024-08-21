@@ -1,4 +1,9 @@
 package com.example.binanceticker.domain.model
 
-class CryptoCurrency {
-}
+import kotlinx.serialization.Serializable
+
+@Serializable
+data class CryptoCurrency(
+    val symbol: String,
+    val quoteVolume: String
+)

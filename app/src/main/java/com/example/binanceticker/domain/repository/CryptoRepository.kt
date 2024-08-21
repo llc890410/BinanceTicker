@@ -1,4 +1,8 @@
 package com.example.binanceticker.domain.repository
 
-class CryptoRepository {
+import com.example.binanceticker.domain.model.CryptoCurrency
+import kotlinx.coroutines.flow.Flow
+
+interface CryptoRepository {
+    suspend fun getTop100Cryptos(): Flow<List<CryptoCurrency>>
 }

@@ -1,4 +1,10 @@
 package com.example.binanceticker.data.remote
 
-class RemoteDataSource {
+import com.example.binanceticker.data.remote.api.BinanceApiService
+import javax.inject.Inject
+
+class RemoteDataSource @Inject constructor(
+    private val apiService: BinanceApiService
+){
+    suspend fun fetchCryptoData() = apiService.getMiniTickers()
 }
