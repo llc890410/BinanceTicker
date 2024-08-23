@@ -27,40 +27,18 @@ class MainActivity : AppCompatActivity() {
         enableEdgeToEdge()
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
         ViewCompat.setOnApplyWindowInsetsListener(binding.root) { view, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             view.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
 
-        fetchTop100CryptoData()
-    }
-
-    private fun fetchTop100CryptoData() {
-        lifecycleScope.launch {
-            lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.fetchTop100CryptoData()
-                viewModel.top100CryptoList.collect { cryptos ->
-                    Timber.d("Fetched %d cryptocurrencies", cryptos.size)
-                    cryptos.forEach { crypto ->
-                        Timber.d(
-                            "Symbol: %s, Price Change: %s, Price Change Percent: %s, Last Price: %s, Quote Volume: %s",
-                            crypto.symbol,
-                            crypto.priceChange,
-                            crypto.priceChangePercent,
-                            crypto.lastPrice,
-                            crypto.quoteVolume
-                        )
-                    }
-                    updateTextView(cryptos)
-                }
-            }
+        if (savedInstanceState == null) {
+            supportFragmentManager.beginTransaction()
+                .replace(binding.fragmentContainer.id, CryptoListFragment())
+                .commitNow()
         }
-    }
-
-    private fun updateTextView(cryptos: List<CryptoCurrency>) {
-        val symbols = cryptos.joinToString(separator = "\n") { it.symbol }
-        binding.textViewCryptoSymbols.text = symbols
     }
 
 }
