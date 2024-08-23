@@ -43,7 +43,14 @@ class MainActivity : AppCompatActivity() {
                 viewModel.top100CryptoList.collect { cryptos ->
                     Timber.d("Fetched %d cryptocurrencies", cryptos.size)
                     cryptos.forEach { crypto ->
-                        Timber.d("Symbol: %s, Volume: %s", crypto.symbol, crypto.quoteVolume)
+                        Timber.d(
+                            "Symbol: %s, Price Change: %s, Price Change Percent: %s, Last Price: %s, Quote Volume: %s",
+                            crypto.symbol,
+                            crypto.priceChange,
+                            crypto.priceChangePercent,
+                            crypto.lastPrice,
+                            crypto.quoteVolume
+                        )
                     }
                     updateTextView(cryptos)
                 }
