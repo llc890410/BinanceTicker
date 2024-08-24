@@ -11,6 +11,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.binanceticker.databinding.FragmentCryptoListBinding
+import com.example.binanceticker.presentation.state.UiState
 import com.example.binanceticker.presentation.viewmodel.CryptoViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
@@ -51,17 +52,22 @@ class CryptoListFragment : Fragment() {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.fetchTop100CryptoData()
-                viewModel.top100CryptoList.collect { cryptos ->
-                    cryptoListAdapter.submitList(cryptos)
-                    cryptos.forEach { crypto ->
-                        Timber.d(
-                            "Symbol: %s, Price Change: %s, Price Change Percent: %s, Last Price: %s, Quote Volume: %s",
-                            crypto.symbol,
-                            crypto.priceChange,
-                            crypto.priceChangePercent,
-                            crypto.lastPrice,
-                            crypto.quoteVolume
-                        )
+                viewModel.cryptoUIState.collect { uiState ->
+                    when (uiState) {
+                        is UiState.Loading -> {
+                            binding.progressBar.visibility = View.VISIBLE
+                            binding.recyclerViewCryptoList.visibility = View.GONE
+                        }
+                        is UiState.Success -> {
+                            binding.progressBar.visibility = View.GONE
+                            binding.recyclerViewCryptoList.visibility = View.VISIBLE
+                            cryptoListAdapter.submitList(uiState.data)
+                        }
+                        is UiState.Error -> {
+                            binding.progressBar.visibility = View.GONE
+                            binding.recyclerViewCryptoList.visibility = View.GONE
+                            Timber.e(uiState.message)
+                        }
                     }
                 }
             }
