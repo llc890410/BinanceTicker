@@ -12,6 +12,7 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
@@ -86,8 +87,9 @@ object NetworkModule {
     @Singleton
     fun provideWebSocketManager(
         json: Json,
-        okHttpClient: OkHttpClient
+        okHttpClient: OkHttpClient,
+        @WebSocketScope coroutineScope: CoroutineScope
     ) : WebSocketManager {
-        return WebSocketManager(json, okHttpClient)
+        return WebSocketManager(json, okHttpClient, coroutineScope)
     }
 }
