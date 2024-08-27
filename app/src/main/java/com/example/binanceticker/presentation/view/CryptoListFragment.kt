@@ -76,8 +76,8 @@ class CryptoListFragment : Fragment() {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.startTrackingSymbols()
-                viewModel.tickerStream.collect { (symbol, ticker) ->
-                    Timber.d("Symbol: $symbol, Ticker: $ticker")
+                viewModel.webSocketTickerFlow.collect { (symbol, ticker) ->
+                    Timber.d("Symbol: $symbol, WebSocketTicker: $ticker")
                 }
             }
         }

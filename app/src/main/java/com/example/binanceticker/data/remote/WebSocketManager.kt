@@ -1,6 +1,6 @@
 package com.example.binanceticker.data.remote
 
-import com.example.binanceticker.domain.model.Ticker
+import com.example.binanceticker.domain.model.WebSocketTicker
 import com.example.binanceticker.utils.Constants.BINANCE_WS_STREAM_URL
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
@@ -43,8 +43,8 @@ class WebSocketManager @Inject constructor(
     // tryEmit (unlike emit) is not a suspending function,
     // so it clearly cannot operate without a buffer where it can store emitted value for all the suspending subscribers to process.
     // On the other hand, emit is suspending, so it does not need buffer space, as it can always suspend in case any of the subscribers are not ready yet.
-    private val _tickerData = MutableSharedFlow<Pair<String, Ticker>>(replay = 1, extraBufferCapacity = 64)
-    val tickerData: SharedFlow<Pair<String, Ticker>> = _tickerData.asSharedFlow()
+    private val _ticker = MutableSharedFlow<Pair<String, WebSocketTicker>>(replay = 1, extraBufferCapacity = 64)
+    val ticker: SharedFlow<Pair<String, WebSocketTicker>> = _ticker.asSharedFlow()
 
     fun connect() {
         if (!isConnected.get()) {
@@ -177,13 +177,13 @@ class WebSocketManager @Inject constructor(
             return
         }
 
-        val ticker = try {
-            json.decodeFromString<Ticker>(data)
+        val webSocketTicker = try {
+            json.decodeFromString<WebSocketTicker>(data)
         } catch (e: Exception) {
             Timber.e("Failed to parse ticker data: ${e.message}, data: $data")
             return
         }
 
-        _tickerData.tryEmit(symbol.uppercase() to ticker)
+        _ticker.tryEmit(symbol.uppercase() to webSocketTicker)
     }
 }

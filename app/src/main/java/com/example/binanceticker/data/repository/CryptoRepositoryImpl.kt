@@ -2,7 +2,7 @@ package com.example.binanceticker.data.repository
 
 import com.example.binanceticker.data.remote.NetworkResponse
 import com.example.binanceticker.data.remote.RemoteDataSource
-import com.example.binanceticker.domain.model.CryptoCurrency
+import com.example.binanceticker.domain.model.ApiTicker
 import com.example.binanceticker.domain.repository.CryptoRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -13,7 +13,7 @@ import javax.inject.Inject
 class CryptoRepositoryImpl @Inject constructor(
     private val remoteDataSource: RemoteDataSource
 ): CryptoRepository {
-    override suspend fun getTop100Cryptos(): Flow<NetworkResponse<List<CryptoCurrency>>> = flow {
+    override suspend fun getTop100Cryptos(): Flow<NetworkResponse<List<ApiTicker>>> = flow {
         try {
             val response = remoteDataSource.fetchCryptoData()
             if (response.isSuccessful && response.body() != null) {

@@ -6,11 +6,11 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.example.binanceticker.databinding.ItemCryptoBinding
-import com.example.binanceticker.domain.model.CryptoCurrency
+import com.example.binanceticker.domain.model.SymbolQuoteData
 import java.util.Locale
 
 class CryptoListAdapter
-    : ListAdapter<CryptoCurrency, CryptoListAdapter.CryptoViewHolder>(CryptoDiffCallback()) {
+    : ListAdapter<SymbolQuoteData, CryptoListAdapter.CryptoViewHolder>(CryptoDiffCallback()) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CryptoViewHolder {
         val binding = ItemCryptoBinding.inflate(LayoutInflater.from(parent.context), parent, false)
@@ -25,24 +25,24 @@ class CryptoListAdapter
     class CryptoViewHolder(private val binding: ItemCryptoBinding) :
         RecyclerView.ViewHolder(binding.root) {
 
-        fun bind(crypto: CryptoCurrency) {
-            binding.textViewSymbol.text = crypto.symbol
+        fun bind(data: SymbolQuoteData) {
+            binding.textViewSymbol.text = data.symbol
 
-            val formattedLastPrice = crypto.lastPrice.toBigDecimal().stripTrailingZeros().toPlainString()
+            val formattedLastPrice = data.lastPrice.toBigDecimal().stripTrailingZeros().toPlainString()
             binding.textViewLastPrice.text = formattedLastPrice
 
-            val formattedPercent = String.format(Locale.ROOT, "%.2f", crypto.priceChangePercent.toDouble()) + "%"
+            val formattedPercent = String.format(Locale.ROOT, "%.2f", data.priceChangePercent.toDouble()) + "%"
             binding.textViewPriceChangePercent.text = formattedPercent
         }
     }
 }
 
-class CryptoDiffCallback : DiffUtil.ItemCallback<CryptoCurrency>() {
-    override fun areItemsTheSame(oldItem: CryptoCurrency, newItem: CryptoCurrency): Boolean {
+class CryptoDiffCallback : DiffUtil.ItemCallback<SymbolQuoteData>() {
+    override fun areItemsTheSame(oldItem: SymbolQuoteData, newItem: SymbolQuoteData): Boolean {
         return oldItem.symbol == newItem.symbol
     }
 
-    override fun areContentsTheSame(oldItem: CryptoCurrency, newItem: CryptoCurrency): Boolean {
+    override fun areContentsTheSame(oldItem: SymbolQuoteData, newItem: SymbolQuoteData): Boolean {
         return oldItem == newItem
     }
 }

@@ -4,7 +4,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class Ticker(
+data class WebSocketTicker(
     @SerialName("e") val eventType: String,
     @SerialName("E") val eventTime: Long,
     @SerialName("s") val symbol: String,

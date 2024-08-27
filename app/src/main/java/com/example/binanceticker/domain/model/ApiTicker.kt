@@ -4,7 +4,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class CryptoCurrency(
+data class ApiTicker(
     @SerialName("symbol")               val symbol: String,
     @SerialName("priceChange")          val priceChange: String,
     @SerialName("priceChangePercent")   val priceChangePercent: String,
