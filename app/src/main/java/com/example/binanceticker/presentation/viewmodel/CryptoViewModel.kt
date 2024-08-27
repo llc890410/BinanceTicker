@@ -1,8 +1,8 @@
 package com.example.binanceticker.presentation.viewmodel
 
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.binanceticker.data.remote.NetworkResponse
+import com.example.binanceticker.data.remote.WebSocketManager
 import com.example.binanceticker.domain.model.CryptoCurrency
 import com.example.binanceticker.domain.repository.CryptoRepository
 import com.example.binanceticker.presentation.state.UiState
@@ -14,8 +14,9 @@ import javax.inject.Inject
 
 @HiltViewModel
 class CryptoViewModel @Inject constructor(
-    private val repository: CryptoRepository
-) : ViewModel() {
+    private val repository: CryptoRepository,
+    webSocketManager: WebSocketManager
+) : BaseViewModel(webSocketManager) {
 
     private val _cryptoUIState = MutableStateFlow(UiState.Loading as UiState<List<CryptoCurrency>>)
     val cryptoUIState: StateFlow<UiState<List<CryptoCurrency>>> = _cryptoUIState
@@ -29,6 +30,20 @@ class CryptoViewModel @Inject constructor(
                     is NetworkResponse.Error -> UiState.Error(response.errMessage)
                 }
             }
+        }
+    }
+
+    private val symbols = listOf("BTCUSDT", "ETHUSDT", "BNBUSDT")
+
+    fun startTrackingSymbols() {
+        symbols.forEach { symbol ->
+            subscribeSymbols(symbol)
+        }
+    }
+
+    fun stopTrackingSymbols() {
+        symbols.forEach { symbol ->
+            unsubscribeSymbols(symbol)
         }
     }
 }

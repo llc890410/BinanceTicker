@@ -72,10 +72,20 @@ class CryptoListFragment : Fragment() {
                 }
             }
         }
+
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.startTrackingSymbols()
+                viewModel.tickerStream.collect { (symbol, ticker) ->
+                    Timber.d("Symbol: $symbol, Ticker: $ticker")
+                }
+            }
+        }
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+        viewModel.stopTrackingSymbols()
     }
 }
