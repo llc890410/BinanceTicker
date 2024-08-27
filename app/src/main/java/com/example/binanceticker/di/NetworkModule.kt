@@ -1,8 +1,9 @@
 package com.example.binanceticker.di
 
 import com.example.binanceticker.BuildConfig
+import com.example.binanceticker.data.remote.WebSocketManager
 import com.example.binanceticker.data.remote.api.BinanceApiService
-import com.example.binanceticker.utils.Constants.BASE_URL
+import com.example.binanceticker.utils.Constants.BINANCE_API_BASE_URL
 import com.example.binanceticker.utils.Constants.CONNECT_TIMEOUT
 import com.example.binanceticker.utils.Constants.READ_TIMEOUT
 import com.example.binanceticker.utils.Constants.WRITE_TIMEOUT
@@ -67,7 +68,7 @@ object NetworkModule {
     ) : Retrofit {
         val contentType = "application/json".toMediaType()
         return Retrofit.Builder()
-            .baseUrl(BASE_URL)
+            .baseUrl(BINANCE_API_BASE_URL)
             .client(okHttpClient)
             .addConverterFactory(json.asConverterFactory(contentType))
             .build()
@@ -79,5 +80,14 @@ object NetworkModule {
         retrofit: Retrofit
     ) : BinanceApiService {
         return retrofit.create(BinanceApiService::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideWebSocketManager(
+        json: Json,
+        okHttpClient: OkHttpClient
+    ) : WebSocketManager {
+        return WebSocketManager(json, okHttpClient)
     }
 }
