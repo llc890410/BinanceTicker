@@ -11,6 +11,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
 
 @HiltViewModel
@@ -22,29 +23,69 @@ class CryptoViewModel @Inject constructor(
     private val _cryptoUIState = MutableStateFlow(UiState.Loading as UiState<List<SymbolQuoteData>>)
     val cryptoUIState: StateFlow<UiState<List<SymbolQuoteData>>> = _cryptoUIState
 
-    fun fetchTop100CryptoData() {
+    private var symbols = listOf<String>()
+
+    init {
+        fetchTop100CryptoData()
+        collectWebSocketData()
+    }
+
+    private fun fetchTop100CryptoData() {
         viewModelScope.launch {
             _cryptoUIState.value = UiState.Loading
             repository.getTop100Cryptos().collect { response ->
-                _cryptoUIState.value = when (response) {
-                    is NetworkResponse.Success -> UiState.Success(response.data.map { it.toSymbolQuoteData() })
-                    is NetworkResponse.Error -> UiState.Error(response.errMessage)
+                when (response) {
+                    is NetworkResponse.Success -> {
+                        val symbolQuoteDataList = response.data.map { it.toSymbolQuoteData() }.take(5) //暫時取五個
+                        _cryptoUIState.value = UiState.Success(symbolQuoteDataList)
+                        symbols = symbolQuoteDataList.map { it.symbol }
+                        startTrackingSymbols()
+                    }
+                    is NetworkResponse.Error -> {
+                        _cryptoUIState.value = UiState.Error(response.errMessage)
+                    }
                 }
             }
         }
     }
 
-    private val symbols = listOf("BTCUSDT", "ETHUSDT", "BNBUSDT")
+    private fun collectWebSocketData() {
+        viewModelScope.launch {
+            webSocketTickerFlow.collect { (symbol, ticker) ->
+                Timber.d("Symbol: $symbol, WebSocketTicker: $ticker")
+                updateCryptoData(symbol, ticker.toSymbolQuoteData())
+            }
+        }
+    }
 
-    fun startTrackingSymbols() {
+    private fun updateCryptoData(symbol: String, symbolQuoteData: SymbolQuoteData) {
+        val currentData = _cryptoUIState.value
+        if (currentData is UiState.Success) {
+            val updatedList = currentData.data.map { item ->
+                if (item.symbol == symbol) {
+                    symbolQuoteData
+                } else {
+                    item
+                }
+            }
+            _cryptoUIState.value = UiState.Success(updatedList)
+        }
+    }
+
+    private fun startTrackingSymbols() {
         symbols.forEach { symbol ->
             subscribeSymbols(symbol)
         }
     }
 
-    fun stopTrackingSymbols() {
+    private fun stopTrackingSymbols() {
         symbols.forEach { symbol ->
             unsubscribeSymbols(symbol)
         }
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        stopTrackingSymbols()
     }
 }

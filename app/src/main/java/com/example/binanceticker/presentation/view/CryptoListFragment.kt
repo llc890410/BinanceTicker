@@ -51,7 +51,6 @@ class CryptoListFragment : Fragment() {
     private fun observeCryptoList() {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.fetchTop100CryptoData()
                 viewModel.cryptoUIState.collect { uiState ->
                     when (uiState) {
                         is UiState.Loading -> {
@@ -72,20 +71,10 @@ class CryptoListFragment : Fragment() {
                 }
             }
         }
-
-        lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.startTrackingSymbols()
-                viewModel.webSocketTickerFlow.collect { (symbol, ticker) ->
-                    Timber.d("Symbol: $symbol, WebSocketTicker: $ticker")
-                }
-            }
-        }
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
-        viewModel.stopTrackingSymbols()
     }
 }
