@@ -130,6 +130,11 @@ class WebSocketManager @Inject constructor(
         }
     }
 
+    fun listSubscriptions() {
+        val message = createSubscriptionMessage("LIST_SUBSCRIPTIONS", emptyList())
+        webSocket?.send(message)
+    }
+
     private fun createSubscriptionMessage(method: String, params: List<String>): String {
         val id = requestIdCounter.getAndIncrement()
         val jsonObject = JSONObject().apply {
@@ -149,9 +154,18 @@ class WebSocketManager @Inject constructor(
         }
 
         when {
-            jsonObject.has("result") -> { // 如果包含 "result"，則表示這是一個訂閱確認(Subscribe/Unsubscribe)，直接忽略
-                Timber.d("Subscription confirmed with id: ${jsonObject.getInt("id")}")
-                return
+            jsonObject.has("code") -> {
+                val code = jsonObject.getInt("code")
+                val msg = jsonObject.getString("msg")
+                Timber.e("Error code: $code, message: $msg")
+            }
+            jsonObject.has("result") -> {
+                if (jsonObject.get("result") is JSONArray) {
+                    val subscriptions = jsonObject.getJSONArray("result")
+                    Timber.d("Current subscriptions: $subscriptions")
+                } else {
+                    Timber.d("Subscription confirmed with id: ${jsonObject.getInt("id")}")
+                }
             }
             jsonObject.has("stream") -> {
                 val data = jsonObject.getString("data")
