@@ -114,18 +114,18 @@ class WebSocketManager @Inject constructor(
         }
     }
 
-    fun subscribe(symbol: String) {
-        val stream = "${symbol.lowercase()}@ticker"
-        if (subscribedSymbols.add(stream)) {
-            val message = createSubscriptionMessage("SUBSCRIBE", listOf(stream))
+    fun subscribe(symbols: List<String>) {
+        val streams = symbols.map { "${it.lowercase()}@ticker" }
+        if (subscribedSymbols.addAll(streams)) {
+            val message = createSubscriptionMessage("SUBSCRIBE", streams)
             webSocket?.send(message)
         }
     }
 
-    fun unsubscribe(symbol: String) {
-        val stream = "${symbol.lowercase()}@ticker"
-        if (subscribedSymbols.remove(stream)) {
-            val message = createSubscriptionMessage("UNSUBSCRIBE", listOf(stream))
+    fun unsubscribe(symbols: List<String>) {
+        val streams = symbols.map { "${it.lowercase()}@ticker" }
+        if (subscribedSymbols.removeAll(streams.toSet())) {
+            val message = createSubscriptionMessage("UNSUBSCRIBE", streams)
             webSocket?.send(message)
         }
     }

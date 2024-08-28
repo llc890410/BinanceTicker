@@ -36,7 +36,7 @@ class CryptoViewModel @Inject constructor(
             repository.getTop100Cryptos().collect { response ->
                 when (response) {
                     is NetworkResponse.Success -> {
-                        val symbolQuoteDataList = response.data.map { it.toSymbolQuoteData() }.take(5) //暫時取五個
+                        val symbolQuoteDataList = response.data.map { it.toSymbolQuoteData() }.take(20) //暫時取20個
                         _cryptoUIState.value = UiState.Success(symbolQuoteDataList)
                         symbols = symbolQuoteDataList.map { it.symbol }
                         startTrackingSymbols()
@@ -73,15 +73,11 @@ class CryptoViewModel @Inject constructor(
     }
 
     private fun startTrackingSymbols() {
-        symbols.forEach { symbol ->
-            subscribeSymbols(symbol)
-        }
+        subscribeSymbols(symbols)
     }
 
     private fun stopTrackingSymbols() {
-        symbols.forEach { symbol ->
-            unsubscribeSymbols(symbol)
-        }
+        unsubscribeSymbols(symbols)
     }
 
     override fun onCleared() {

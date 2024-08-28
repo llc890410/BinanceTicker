@@ -20,11 +20,11 @@ abstract class BaseViewModel(
         webSocketManager.disconnect()
     }
 
-    fun subscribeSymbols(symbols: String) {
+    fun subscribeSymbols(symbols: List<String>) {
         webSocketManager.subscribe(symbols)
     }
 
-    fun unsubscribeSymbols(symbols: String) {
+    fun unsubscribeSymbols(symbols: List<String>) {
         webSocketManager.unsubscribe(symbols)
     }
 }
