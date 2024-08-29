@@ -5,9 +5,11 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import timber.log.Timber
 import javax.inject.Qualifier
 import javax.inject.Singleton
 
@@ -19,9 +21,18 @@ object CoroutineScopeModule {
     @Singleton
     @Provides
     fun provideWebSocketCoroutineScope(
-        @IoDispatcher ioDispatcher: CoroutineDispatcher
+        @IoDispatcher ioDispatcher: CoroutineDispatcher,
+        exceptionHandler: CoroutineExceptionHandler
     ): CoroutineScope {
-        return CoroutineScope(SupervisorJob() + ioDispatcher)
+        return CoroutineScope(SupervisorJob() + ioDispatcher + exceptionHandler)
+    }
+
+    @Singleton
+    @Provides
+    fun provideCoroutineExceptionHandler(): CoroutineExceptionHandler {
+        return CoroutineExceptionHandler { _, throwable ->
+            Timber.e(throwable)
+        }
     }
 
     @IoDispatcher

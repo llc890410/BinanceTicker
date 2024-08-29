@@ -11,15 +11,6 @@ abstract class BaseViewModel(
 
     val webSocketTickerFlow: SharedFlow<Pair<String, WebSocketTicker>> = webSocketManager.ticker
 
-    init {
-        webSocketManager.connect()
-    }
-
-    override fun onCleared() {
-        super.onCleared()
-        webSocketManager.disconnect()
-    }
-
     fun subscribeSymbols(symbols: List<String>) {
         webSocketManager.subscribe(symbols)
     }
