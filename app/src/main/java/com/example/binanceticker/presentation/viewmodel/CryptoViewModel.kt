@@ -10,6 +10,7 @@ import com.example.binanceticker.utils.toSymbolQuoteData
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
@@ -51,10 +52,12 @@ class CryptoViewModel @Inject constructor(
 
     private fun collectWebSocketData() {
         viewModelScope.launch {
-            webSocketTickerFlow.collect { (symbol, ticker) ->
-                Timber.d("Symbol: $symbol, WebSocketTicker: $ticker")
-                updateCryptoData(symbol, ticker.toSymbolQuoteData())
-            }
+            webSocketTickerFlow
+                .filter { (symbol, _) -> symbols.contains(symbol) }
+                .collect { (symbol, ticker) ->
+                    Timber.d("Symbol: $symbol, WebSocketTicker: $ticker")
+                    updateCryptoData(symbol, ticker.toSymbolQuoteData())
+                }
         }
     }
 

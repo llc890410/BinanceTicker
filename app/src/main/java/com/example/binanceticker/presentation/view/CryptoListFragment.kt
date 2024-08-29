@@ -9,6 +9,7 @@ import android.view.ViewGroup
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.binanceticker.databinding.FragmentCryptoListBinding
 import com.example.binanceticker.presentation.state.UiState
@@ -41,7 +42,10 @@ class CryptoListFragment : Fragment() {
     }
 
     private fun setupRecyclerView() {
-        cryptoListAdapter = CryptoListAdapter()
+        cryptoListAdapter = CryptoListAdapter { symbolQuoteData ->
+            val action = CryptoListFragmentDirections.actionCryptoListFragmentToTaFragment(symbolQuoteData)
+            findNavController().navigate(action)
+        }
         binding.recyclerViewCryptoList.apply {
             adapter = cryptoListAdapter
             layoutManager = LinearLayoutManager(requireContext())

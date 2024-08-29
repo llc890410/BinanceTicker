@@ -9,12 +9,13 @@ import com.example.binanceticker.databinding.ItemCryptoBinding
 import com.example.binanceticker.domain.model.SymbolQuoteData
 import java.util.Locale
 
-class CryptoListAdapter
-    : ListAdapter<SymbolQuoteData, CryptoListAdapter.CryptoViewHolder>(CryptoDiffCallback()) {
+class CryptoListAdapter(
+    private val onItemClicked: (SymbolQuoteData) -> Unit
+) : ListAdapter<SymbolQuoteData, CryptoListAdapter.CryptoViewHolder>(CryptoDiffCallback()) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CryptoViewHolder {
         val binding = ItemCryptoBinding.inflate(LayoutInflater.from(parent.context), parent, false)
-        return CryptoViewHolder(binding)
+        return CryptoViewHolder(binding, onItemClicked)
     }
 
     override fun onBindViewHolder(holder: CryptoViewHolder, position: Int) {
@@ -22,8 +23,10 @@ class CryptoListAdapter
         holder.bind(crypto)
     }
 
-    class CryptoViewHolder(private val binding: ItemCryptoBinding) :
-        RecyclerView.ViewHolder(binding.root) {
+    class CryptoViewHolder(
+        private val binding: ItemCryptoBinding,
+        private val onItemClicked: (SymbolQuoteData) -> Unit
+    ) : RecyclerView.ViewHolder(binding.root) {
 
         fun bind(data: SymbolQuoteData) {
             binding.textViewSymbol.text = data.symbol
@@ -33,6 +36,10 @@ class CryptoListAdapter
 
             val formattedPercent = String.format(Locale.ROOT, "%.2f", data.priceChangePercent.toDouble()) + "%"
             binding.textViewPriceChangePercent.text = formattedPercent
+
+            binding.root.setOnClickListener {
+                onItemClicked(data)
+            }
         }
     }
 }

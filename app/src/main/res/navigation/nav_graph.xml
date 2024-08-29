@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/cryptoListFragment">
+
+    <fragment
+        android:id="@+id/cryptoListFragment"
+        android:name="com.example.binanceticker.presentation.view.CryptoListFragment"
+        android:label="fragment_crypto_list"
+        tools:layout="@layout/fragment_crypto_list" >
+        <action
+            android:id="@+id/action_cryptoListFragment_to_taFragment"
+            app:destination="@id/taFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/taFragment"
+        android:name="com.example.binanceticker.presentation.view.TaFragment"
+        android:label="fragment_ta"
+        tools:layout="@layout/fragment_ta" >
+        <argument
+            android:name="symbolQuoteData"
+            app:argType="com.example.binanceticker.domain.model.SymbolQuoteData" />
+    </fragment>
+</navigation>
