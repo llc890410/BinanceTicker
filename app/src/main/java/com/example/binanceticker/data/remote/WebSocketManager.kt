@@ -1,5 +1,7 @@
 package com.example.binanceticker.data.remote
 
+import com.example.binanceticker.domain.model.WebSocketKline
+import com.example.binanceticker.domain.model.WebSocketKlineResponse
 import com.example.binanceticker.domain.model.WebSocketTicker
 import com.example.binanceticker.utils.Constants.BINANCE_WS_STREAM_URL
 import kotlinx.coroutines.CoroutineScope
@@ -27,14 +29,16 @@ class WebSocketManager @Inject constructor(
     private val okHttpClient: OkHttpClient,
     private val coroutineScope: CoroutineScope
 ) {
-
     companion object {
         private const val MAX_RETRY_ATTEMPTS = 5
         private const val DELAY_TIME = 5000L
+        private const val SUBSCRIBE = "SUBSCRIBE"
+        private const val UNSUBSCRIBE = "UNSUBSCRIBE"
+        private const val LIST_SUBSCRIPTIONS = "LIST_SUBSCRIPTIONS"
     }
 
     private var webSocket: WebSocket? = null
-    private val subscribedSymbols = ConcurrentHashMap.newKeySet<String>()
+    private val activeStreams = ConcurrentHashMap.newKeySet<String>()
     private val requestIdCounter = AtomicInteger(1)
     private var isConnected = AtomicBoolean(false)
     private var retryAttempts = 0
@@ -45,6 +49,8 @@ class WebSocketManager @Inject constructor(
     // On the other hand, emit is suspending, so it does not need buffer space, as it can always suspend in case any of the subscribers are not ready yet.
     private val _ticker = MutableSharedFlow<Pair<String, WebSocketTicker>>(replay = 1, extraBufferCapacity = 64)
     val ticker: SharedFlow<Pair<String, WebSocketTicker>> = _ticker.asSharedFlow()
+    private val _kline = MutableSharedFlow<Pair<String, WebSocketKline>>(replay = 1, extraBufferCapacity = 64)
+    val kline: SharedFlow<Pair<String, WebSocketKline>> = _kline.asSharedFlow()
 
     fun connect() {
         if (!isConnected.get()) {
@@ -96,7 +102,7 @@ class WebSocketManager @Inject constructor(
         } finally {
             webSocket = null
             isConnected.set(false)
-            subscribedSymbols.clear()
+            activeStreams.clear()
         }
     }
 
@@ -114,24 +120,41 @@ class WebSocketManager @Inject constructor(
         }
     }
 
-    fun subscribe(symbols: List<String>) {
+    fun subscribeTicker(symbols: List<String>) {
         val streams = symbols.map { "${it.lowercase()}@ticker" }
-        if (subscribedSymbols.addAll(streams)) {
-            val message = createSubscriptionMessage("SUBSCRIBE", streams)
+        if (activeStreams.addAll(streams)) {
+            val message = createSubscriptionMessage(SUBSCRIBE, streams)
             webSocket?.send(message)
         }
     }
 
-    fun unsubscribe(symbols: List<String>) {
+    fun unsubscribeTicker(symbols: List<String>) {
         val streams = symbols.map { "${it.lowercase()}@ticker" }
-        if (subscribedSymbols.removeAll(streams.toSet())) {
-            val message = createSubscriptionMessage("UNSUBSCRIBE", streams)
+        if (activeStreams.removeAll(streams.toSet())) {
+            val message = createSubscriptionMessage(UNSUBSCRIBE, streams)
             webSocket?.send(message)
         }
     }
+
+    fun subscribeKline(symbols: List<String>, interval: String) {
+        val streams = symbols.map { "${it.lowercase()}@kline_${interval.lowercase()}" }
+        if (activeStreams.addAll(streams)) {
+            val message = createSubscriptionMessage(SUBSCRIBE, streams)
+            webSocket?.send(message)
+        }
+    }
+
+    fun unsubscribeKline(symbols: List<String>, interval: String) {
+        val streams = symbols.map { "${it.lowercase()}@kline_${interval.lowercase()}" }
+        if (activeStreams.removeAll(streams.toSet())) {
+            val message = createSubscriptionMessage(UNSUBSCRIBE, streams)
+            webSocket?.send(message)
+        }
+    }
+
 
     fun listSubscriptions() {
-        val message = createSubscriptionMessage("LIST_SUBSCRIPTIONS", emptyList())
+        val message = createSubscriptionMessage(LIST_SUBSCRIPTIONS, emptyList())
         webSocket?.send(message)
     }
 
@@ -160,44 +183,68 @@ class WebSocketManager @Inject constructor(
                 Timber.e("Error code: $code, message: $msg")
             }
             jsonObject.has("result") -> {
-                if (jsonObject.get("result") is JSONArray) {
-                    val subscriptions = jsonObject.getJSONArray("result")
-                    Timber.d("Current subscriptions: $subscriptions")
-                } else {
-                    Timber.d("Subscription confirmed with id: ${jsonObject.getInt("id")}")
-                }
+                handleSubscriptionResult(jsonObject)
             }
             jsonObject.has("stream") -> {
-                val data = jsonObject.getString("data")
-                processTickerData(data)
+                processData(jsonObject.getString("data"))
             }
             else -> {
-                processTickerData(message)
+                processData(message)
             }
         }
     }
 
-    private fun processTickerData(data: String) {
-        val dataObject = try {
+    private fun handleSubscriptionResult(jsonObject: JSONObject) {
+        if (jsonObject.get("result") is JSONArray) {
+            val subscriptions = jsonObject.getJSONArray("result")
+            Timber.d("Current subscriptions: $subscriptions")
+        } else {
+            Timber.d("Subscription confirmed with id: ${jsonObject.getInt("id")}")
+        }
+    }
+
+    private fun processData(data: String) {
+        val jsonObject = try {
             JSONObject(data)
         } catch (e: Exception) {
-            Timber.e("Invalid data JSON: ${e.message}, data: $data")
+            Timber.e("Invalid JSON: ${e.message}")
             return
         }
 
-        val symbol: String = dataObject.optString("s").lowercase()
+        val eventType = jsonObject.optString("e")
+        val symbol = jsonObject.optString("s").lowercase()
+
         if (symbol.isEmpty()) {
             Timber.e("WebSocket message received without a symbol: $data")
             return
         }
 
+        when (eventType) {
+            "24hrTicker" -> processTickerData(symbol, jsonObject)
+            "kline" -> processKlineData(symbol, jsonObject)
+            else -> Timber.w("Unhandled event type: $eventType")
+        }
+    }
+
+    private fun processTickerData(symbol: String, dataObject: JSONObject) {
         val webSocketTicker = try {
-            json.decodeFromString<WebSocketTicker>(data)
+            json.decodeFromString<WebSocketTicker>(dataObject.toString())
         } catch (e: Exception) {
-            Timber.e("Failed to parse ticker data: ${e.message}, data: $data")
+            Timber.e("Failed to parse ticker data: ${e.message}, data: $dataObject")
             return
         }
 
         _ticker.tryEmit(symbol.uppercase() to webSocketTicker)
+    }
+
+    private fun processKlineData(symbol: String, dataObject: JSONObject) {
+        val webSocketKlineResponse = try {
+            json.decodeFromString<WebSocketKlineResponse>(dataObject.toString())
+        } catch (e: Exception) {
+            Timber.e("Failed to parse kline data: ${e.message}, data: $dataObject")
+            return
+        }
+
+        _kline.tryEmit(symbol.uppercase() to webSocketKlineResponse.kline)
     }
 }

@@ -76,11 +76,11 @@ class CryptoViewModel @Inject constructor(
     }
 
     private fun startTrackingSymbols() {
-        subscribeSymbols(symbols)
+        subscribeTickers(symbols)
     }
 
     private fun stopTrackingSymbols() {
-        unsubscribeSymbols(symbols)
+        unsubscribeTickers(symbols)
     }
 
     override fun onCleared() {
