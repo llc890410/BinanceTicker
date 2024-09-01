@@ -7,7 +7,9 @@ import com.example.binanceticker.utils.Constants.BINANCE_WS_STREAM_URL
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
@@ -29,6 +31,13 @@ class WebSocketManager @Inject constructor(
     private val okHttpClient: OkHttpClient,
     private val coroutineScope: CoroutineScope
 ) {
+    enum class WebSocketState {
+        CONNECTED,
+        DISCONNECTED,
+        RECONNECTING,
+        FAILED
+    }
+
     companion object {
         private const val MAX_RETRY_ATTEMPTS = 5
         private const val DELAY_TIME = 5000L
@@ -43,14 +52,13 @@ class WebSocketManager @Inject constructor(
     private var isConnected = AtomicBoolean(false)
     private var retryAttempts = 0
 
-    // 這裡的 MutableSharedFlow 需要定義 buffer 大小 因為：
-    // tryEmit (unlike emit) is not a suspending function,
-    // so it clearly cannot operate without a buffer where it can store emitted value for all the suspending subscribers to process.
-    // On the other hand, emit is suspending, so it does not need buffer space, as it can always suspend in case any of the subscribers are not ready yet.
-    private val _ticker = MutableSharedFlow<Pair<String, WebSocketTicker>>(replay = 1, extraBufferCapacity = 64)
-    val ticker: SharedFlow<Pair<String, WebSocketTicker>> = _ticker.asSharedFlow()
-    private val _kline = MutableSharedFlow<Pair<String, WebSocketKline>>(replay = 1, extraBufferCapacity = 64)
-    val kline: SharedFlow<Pair<String, WebSocketKline>> = _kline.asSharedFlow()
+    private val _webSocketState = MutableStateFlow(WebSocketState.DISCONNECTED)
+    val webSocketState: StateFlow<WebSocketState> = _webSocketState
+
+    private val _ticker = MutableSharedFlow<WebSocketTicker>()
+    val ticker: SharedFlow<WebSocketTicker> = _ticker.asSharedFlow()
+    private val _kline = MutableSharedFlow<WebSocketKline>()
+    val kline: SharedFlow<WebSocketKline> = _kline.asSharedFlow()
 
     fun connect() {
         if (!isConnected.get()) {
@@ -75,6 +83,7 @@ class WebSocketManager @Inject constructor(
                 Timber.d("WebSocket connected")
                 isConnected.set(true)
                 retryAttempts = 0
+                _webSocketState.value = WebSocketState.CONNECTED
             }
 
             override fun onMessage(webSocket: WebSocket, text: String) {
@@ -84,12 +93,14 @@ class WebSocketManager @Inject constructor(
             override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
                 Timber.e(t, "WebSocket connection failed")
                 isConnected.set(false)
+                _webSocketState.value = WebSocketState.FAILED
                 retryConnection()
             }
 
             override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
                 Timber.d("WebSocket closed: $reason")
                 isConnected.set(false)
+                _webSocketState.value = WebSocketState.DISCONNECTED
             }
         })
     }
@@ -97,6 +108,7 @@ class WebSocketManager @Inject constructor(
     private fun disconnectWebSocket() {
         try {
             webSocket?.close(1000, "Client closed")
+            _webSocketState.value = WebSocketState.DISCONNECTED
         } catch (e: Exception) {
             Timber.e("Error closing WebSocket: ${e.message}")
         } finally {
@@ -109,10 +121,12 @@ class WebSocketManager @Inject constructor(
     private fun retryConnection() {
         if (retryAttempts >= MAX_RETRY_ATTEMPTS) {
             Timber.e("Maximum retry attempts reached. Giving up.")
+            _webSocketState.value = WebSocketState.FAILED
             return
         }
 
         coroutineScope.launch {
+            _webSocketState.value = WebSocketState.RECONNECTING
             delay(DELAY_TIME)
             retryAttempts++
             Timber.d("Retrying connection... Attempt $retryAttempts")
@@ -220,13 +234,13 @@ class WebSocketManager @Inject constructor(
         }
 
         when (eventType) {
-            "24hrTicker" -> processTickerData(symbol, jsonObject)
-            "kline" -> processKlineData(symbol, jsonObject)
+            "24hrTicker" -> processTickerData(jsonObject)
+            "kline" -> processKlineData(jsonObject)
             else -> Timber.w("Unhandled event type: $eventType")
         }
     }
 
-    private fun processTickerData(symbol: String, dataObject: JSONObject) {
+    private fun processTickerData(dataObject: JSONObject) {
         val webSocketTicker = try {
             json.decodeFromString<WebSocketTicker>(dataObject.toString())
         } catch (e: Exception) {
@@ -234,10 +248,12 @@ class WebSocketManager @Inject constructor(
             return
         }
 
-        _ticker.tryEmit(symbol.uppercase() to webSocketTicker)
+        coroutineScope.launch {
+            _ticker.emit(webSocketTicker)
+        }
     }
 
-    private fun processKlineData(symbol: String, dataObject: JSONObject) {
+    private fun processKlineData(dataObject: JSONObject) {
         val webSocketKlineResponse = try {
             json.decodeFromString<WebSocketKlineResponse>(dataObject.toString())
         } catch (e: Exception) {
@@ -245,6 +261,8 @@ class WebSocketManager @Inject constructor(
             return
         }
 
-        _kline.tryEmit(symbol.uppercase() to webSocketKlineResponse.kline)
+        coroutineScope.launch {
+            _kline.emit(webSocketKlineResponse.kline)
+        }
     }
 }

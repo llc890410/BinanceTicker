@@ -10,8 +10,8 @@ abstract class BaseViewModel(
     private val webSocketManager: WebSocketManager
 ) : ViewModel() {
 
-    val webSocketTickerFlow: SharedFlow<Pair<String, WebSocketTicker>> = webSocketManager.ticker
-    val webSocketKlineFlow: SharedFlow<Pair<String, WebSocketKline>> = webSocketManager.kline
+    val webSocketTickerFlow: SharedFlow<WebSocketTicker> = webSocketManager.ticker
+    val webSocketKlineFlow: SharedFlow<WebSocketKline> = webSocketManager.kline
 
     fun subscribeTickers(symbols: List<String>) {
         webSocketManager.subscribeTicker(symbols)

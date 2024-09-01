@@ -53,19 +53,21 @@ class CryptoViewModel @Inject constructor(
     private fun collectWebSocketData() {
         viewModelScope.launch {
             webSocketTickerFlow
-                .filter { (symbol, _) -> symbols.contains(symbol) }
-                .collect { (symbol, ticker) ->
-                    Timber.d("Symbol: $symbol, WebSocketTicker: $ticker")
-                    updateCryptoData(symbol, ticker.toSymbolQuoteData())
+                .filter { ticker ->
+                    symbols.contains(ticker.symbol)
+                }
+                .collect { ticker ->
+                    Timber.d("Symbol: ${ticker.symbol}, WebSocketTicker: $ticker")
+                    updateCryptoData(ticker.toSymbolQuoteData())
                 }
         }
     }
 
-    private fun updateCryptoData(symbol: String, symbolQuoteData: SymbolQuoteData) {
+    private fun updateCryptoData(symbolQuoteData: SymbolQuoteData) {
         val currentData = _cryptoUIState.value
         if (currentData is UiState.Success) {
             val updatedList = currentData.data.map { item ->
-                if (item.symbol == symbol) {
+                if (item.symbol == symbolQuoteData.symbol) {
                     symbolQuoteData
                 } else {
                     item
