@@ -5,7 +5,9 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.fragment.app.viewModels
 import com.example.binanceticker.databinding.FragmentTaBinding
+import com.example.binanceticker.presentation.viewmodel.TaViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import java.util.Locale
 
@@ -14,6 +16,8 @@ class TaFragment : Fragment() {
 
     private var _binding: FragmentTaBinding? = null
     private val binding get() = _binding!!
+
+    private val viewModel: TaViewModel by viewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -35,6 +39,8 @@ class TaFragment : Fragment() {
             binding.textViewLastPrice.text = formattedLastPrice
             val formattedPercent = String.format(Locale.ROOT, "%.2f", it.priceChangePercent.toDouble()) + "%"
             binding.textViewPriceChangePercent.text = formattedPercent
+
+            viewModel.getKlines(it.symbol, "1m")
         }
 
     }
