@@ -63,6 +63,7 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.retrofit.kotlinx.serialization.converter)
     implementation(libs.timber)
+    implementation(libs.tradingview.lightweightcharts)
 
     implementation(libs.hilt.android)
     ksp(libs.hilt.ksp)
