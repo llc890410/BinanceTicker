@@ -118,17 +118,19 @@ class TaFragment : Fragment() {
         }
 
         viewModel.seriesBarData.observe(viewLifecycleOwner) { barData ->
-            candlestickSeries?.let {
-                chartApi.removeSeries(it)
+            if (candlestickSeries == null) {
+                addCandleSeries(barData)
+            } else {
+                updateCandleSeries(barData)
             }
-            addCandleSeries(barData)
         }
 
         viewModel.seriesHistogramData.observe(viewLifecycleOwner) { histogramData ->
-            histogramSeries?.let {
-                chartApi.removeSeries(it)
+            if (histogramSeries == null) {
+                addHistogramSeries(histogramData)
+            } else {
+                updateHistogramSeries(histogramData)
             }
-            addHistogramSeries(histogramData)
         }
     }
 
@@ -144,6 +146,13 @@ class TaFragment : Fragment() {
                 series.setData(barData.list)
             }
         )
+    }
+
+    private fun updateCandleSeries(barData: ChartData) {
+        val lastBar = barData.list.lastOrNull()
+        lastBar?.let {
+            candlestickSeries?.update(it)
+        }
     }
 
     private fun addHistogramSeries(histogramData: ChartData) {
@@ -167,6 +176,13 @@ class TaFragment : Fragment() {
                 series.setData(histogramData.list)
             }
         )
+    }
+
+    private fun updateHistogramSeries(histogramData: ChartData) {
+        val lastBar = histogramData.list.lastOrNull()
+        lastBar?.let {
+            histogramSeries?.update(it)
+        }
     }
 
     override fun onDestroyView() {
