@@ -1,6 +1,7 @@
 package com.example.binanceticker.domain.model
 
 data class KlineData(
+    val symbol: String,
     val openTime: Long,
     val openPrice: String,
     val highPrice: String,

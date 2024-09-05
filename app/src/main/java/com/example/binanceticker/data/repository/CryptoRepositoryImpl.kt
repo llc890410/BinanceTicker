@@ -42,7 +42,7 @@ class CryptoRepositoryImpl @Inject constructor(
             val responseBody = response.body()
             if (response.isSuccessful && responseBody != null) {
                 val data = responseBody.string()
-                val klines = parseKlines(data)
+                val klines = parseKlines(symbol, data)
                 emit(NetworkResponse.Success(klines))
             } else {
                 emit(NetworkResponse.Error(response.message(), response.code()))
@@ -52,7 +52,7 @@ class CryptoRepositoryImpl @Inject constructor(
         }
     }
 
-    private fun parseKlines(jsonString: String?): List<KlineData> {
+    private fun parseKlines(symbol: String, jsonString: String?): List<KlineData> {
         return try {
             val jsonArray = JSONArray(jsonString)
             val klineDataList = mutableListOf<KlineData>()
@@ -60,6 +60,7 @@ class CryptoRepositoryImpl @Inject constructor(
             for (i in 0 until jsonArray.length()) {
                 val klineArray = jsonArray.getJSONArray(i)
                 val klineData = KlineData(
+                    symbol = symbol,
                     openTime = klineArray.getLong(0),
                     openPrice = klineArray.getString(1),
                     highPrice = klineArray.getString(2),

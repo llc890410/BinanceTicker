@@ -37,6 +37,7 @@ fun WebSocketTicker.toSymbolQuoteData(): SymbolQuoteData {
 
 fun WebSocketKline.toKlineData(): KlineData {
     return KlineData(
+        symbol = symbol,
         openTime = startTime,
         openPrice = openPrice,
         highPrice = highPrice,

@@ -9,7 +9,6 @@ import android.view.ViewGroup
 import androidx.fragment.app.viewModels
 import com.example.binanceticker.databinding.FragmentTaBinding
 import com.example.binanceticker.domain.model.ChartData
-import com.example.binanceticker.domain.model.SymbolQuoteData
 import com.example.binanceticker.presentation.viewmodel.TaViewModel
 import com.tradingview.lightweightcharts.api.chart.models.color.surface.SolidColor
 import com.tradingview.lightweightcharts.api.chart.models.color.toIntColor
@@ -59,16 +58,9 @@ class TaFragment : Fragment() {
         arguments?.let {
             val symbolQuoteData = TaFragmentArgs.fromBundle(it).symbolQuoteData
             symbolQuoteData.let { data ->
-                setupUI(data)
-                viewModel.getKlines(data.symbol, "1d")
+                viewModel.init(data)
             }
         }
-    }
-
-    private fun setupUI(symbolQuoteData: SymbolQuoteData) {
-        binding.textViewSymbol.text = symbolQuoteData.symbol
-        binding.textViewLastPrice.text = symbolQuoteData.lastPrice.toBigDecimal().stripTrailingZeros().toPlainString()
-        binding.textViewPriceChangePercent.text = String.format(Locale.ROOT, "%.2f%%", symbolQuoteData.priceChangePercent.toDouble())
     }
 
     private fun setupChartView() {
@@ -119,6 +111,12 @@ class TaFragment : Fragment() {
     }
 
     private fun observeViewModelData() = viewModel.run {
+        viewModel.cryptoData.observe(viewLifecycleOwner) { symbolQuoteData ->
+            binding.textViewSymbol.text = symbolQuoteData.symbol
+            binding.textViewLastPrice.text = symbolQuoteData.lastPrice.toBigDecimal().stripTrailingZeros().toPlainString()
+            binding.textViewPriceChangePercent.text = String.format(Locale.ROOT, "%.2f%%", symbolQuoteData.priceChangePercent.toDouble())
+        }
+
         viewModel.seriesBarData.observe(viewLifecycleOwner) { barData ->
             candlestickSeries?.let {
                 chartApi.removeSeries(it)
