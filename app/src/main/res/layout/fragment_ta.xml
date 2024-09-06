@@ -5,54 +5,122 @@
     android:id="@+id/frameLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/black"
     tools:context=".presentation.view.TaFragment">
 
     <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/constraintLayoutQuote"
+        android:id="@+id/clQuote"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:padding="8dp"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
         <TextView
-            android:id="@+id/textViewSymbol"
+            android:id="@+id/tvSymbol"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:singleLine="true"
             android:text="Symbol Name"
-            android:textSize="18sp"
-            app:layout_constraintBottom_toBottomOf="parent"
+            android:textColor="@color/chart_white_color"
+            android:textSize="28sp"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
         <TextView
-            android:id="@+id/textViewLastPrice"
+            android:id="@+id/tvLastPrice"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
             android:text="Last Price"
-            android:textSize="16sp"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toEndOf="@id/guideline1"
-            app:layout_constraintTop_toTopOf="parent" />
+            android:textColor="@color/chart_white_color"
+            android:textSize="42sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/tvSymbol" />
 
         <TextView
-            android:id="@+id/textViewPriceChangePercent"
+            android:id="@+id/tvPriceChange"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="Change"
+            android:textColor="@color/chart_white_color"
+            android:textSize="20sp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/tvLastPrice" />
+
+        <TextView
+            android:id="@+id/tvPriceChangePercent"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
             android:text="Change %"
-            android:textSize="16sp"
-            app:layout_constraintBottom_toBottomOf="parent"
+            android:textColor="@color/chart_white_color"
+            android:textSize="20sp"
             app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/tvLastPrice" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/clChip"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/clQuote">
+
+        <com.google.android.material.chip.Chip
+            android:id="@+id/chip_crosshair_mode"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:checkable="true"
+            android:text="磁吸模式"
+            android:textColor="@color/chart_white_color"
+            app:chipBackgroundColor="@color/chart_background_color"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <androidx.constraintlayout.widget.Guideline
-            android:id="@+id/guideline1"
+        <com.google.android.material.chip.Chip
+            android:id="@+id/chip_to_realtime"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            app:layout_constraintGuide_percent="0.5" />
+            android:layout_marginStart="8dp"
+            android:text="移至最新"
+            android:textColor="@color/chart_white_color"
+            app:chipBackgroundColor="@color/chart_background_color"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toEndOf="@id/chip_crosshair_mode"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <com.google.android.material.chip.Chip
+            android:id="@+id/chip_fit_content"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:text="Fix"
+            android:textColor="@color/chart_white_color"
+            app:chipBackgroundColor="@color/chart_background_color"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toEndOf="@id/chip_to_realtime"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <com.google.android.material.chip.Chip
+            android:id="@+id/chip_reset_content"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:text="Reset"
+            android:textColor="@color/chart_white_color"
+            app:chipBackgroundColor="@color/chart_background_color"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toEndOf="@id/chip_fit_content"
+            app:layout_constraintTop_toTopOf="parent" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -64,15 +132,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/constraintLayoutQuote" />
-
-    <TextView
-        android:id="@+id/textViewBarInfo"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textColor="@color/white"
-        app:layout_constraintStart_toStartOf="@id/charts_view"
-        app:layout_constraintTop_toTopOf="@id/charts_view" />
+        app:layout_constraintTop_toBottomOf="@+id/clChip" />
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/clBarInfo"
@@ -188,9 +248,9 @@
         android:id="@+id/progressBar"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/constraintLayoutQuote" />
+        app:layout_constraintBottom_toBottomOf="@id/charts_view"
+        app:layout_constraintEnd_toEndOf="@id/charts_view"
+        app:layout_constraintStart_toStartOf="@id/charts_view"
+        app:layout_constraintTop_toTopOf="@id/charts_view" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

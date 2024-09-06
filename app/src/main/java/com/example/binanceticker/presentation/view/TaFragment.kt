@@ -45,6 +45,7 @@ class TaFragment : Fragment() {
     private val chartApi get() = binding.chartsView.api
     private var candlestickSeries: SeriesApi? = null
     private var histogramSeries: SeriesApi? = null
+    private var isChartReady = false
 
     private val viewModel: TaViewModel by viewModels()
 
@@ -69,28 +70,70 @@ class TaFragment : Fragment() {
         observeViewModelData()
 
         arguments?.let {
-            val symbolQuoteData = TaFragmentArgs.fromBundle(it).symbolQuoteData
-            symbolQuoteData.let { data ->
-                viewModel.init(data)
+            arguments?.let {
+                viewModel.init(TaFragmentArgs.fromBundle(it).symbolQuoteData)
             }
         }
     }
 
     private fun setupChartView() {
-        updateChartViewVisibility(isLoading = true)
+        isChartReady = false
+        binding.progressBar.visibility = View.VISIBLE
+        binding.chartsView.visibility = View.INVISIBLE
         binding.clBarInfo.visibility = View.INVISIBLE
 
+        subscribeToChartStateChanges()
+        setupCrossHairMoveListener()
+
+        chartApi.applyChartOptions()
+
+        binding.chipCrosshairMode.setOnCheckedChangeListener { _, isChecked ->
+            chartApi.applyOptions {
+                crosshair = crosshairOptions {
+                    mode = if (isChecked) {
+                        CrosshairMode.MAGNET
+                    } else {
+                        CrosshairMode.NORMAL
+                    }
+                }
+            }
+        }
+        binding.chipToRealtime.setOnClickListener {
+            chartApi.timeScale.scrollToRealTime()
+        }
+        binding.chipFitContent.setOnClickListener {
+            chartApi.timeScale.fitContent()
+        }
+        binding.chipResetContent.setOnClickListener {
+            chartApi.timeScale.resetTimeScale()
+        }
+    }
+
+    private fun subscribeToChartStateChanges() {
         binding.chartsView.subscribeOnChartStateChange { state ->
             when (state) {
-                is ChartsView.State.Preparing -> updateChartViewVisibility(isLoading = true)
-                is ChartsView.State.Ready -> updateChartViewVisibility(isLoading = false)
+                is ChartsView.State.Preparing -> {
+                    isChartReady = false
+                    binding.progressBar.visibility = View.VISIBLE
+                    binding.chartsView.visibility = View.INVISIBLE
+                    binding.clBarInfo.visibility = View.INVISIBLE
+                }
+                is ChartsView.State.Ready -> {
+                    isChartReady = true
+                    binding.chartsView.visibility = View.VISIBLE
+                }
                 is ChartsView.State.Error -> {
-                    updateChartViewVisibility(isLoading = false)
+                    isChartReady = false
+                    binding.progressBar.visibility = View.INVISIBLE
+                    binding.chartsView.visibility = View.INVISIBLE
+                    binding.clBarInfo.visibility = View.INVISIBLE
                     Timber.e("Chart error: ${state.exception}")
                 }
             }
         }
+    }
 
+    private fun setupCrossHairMoveListener() {
         chartApi.subscribeCrosshairMove { param ->
             if (param.point == null) { //用這個判斷是否進入查價模式
                 binding.clBarInfo.visibility = View.INVISIBLE
@@ -105,13 +148,6 @@ class TaFragment : Fragment() {
                 }
             }
         }
-
-        chartApi.applyChartOptions()
-    }
-
-    private fun updateChartViewVisibility(isLoading: Boolean) {
-        binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.INVISIBLE
-        binding.chartsView.visibility = if (isLoading) View.INVISIBLE else View.VISIBLE
     }
 
     private fun clearPriceInfo() {
@@ -123,13 +159,18 @@ class TaFragment : Fragment() {
 
     private fun updatePriceInfo(data: List<BarPrices>) {
         val barPrice = data.first().prices
-        binding.tvOpen.text = barPrice.open?.toString() ?: ""
-        binding.tvHigh.text = barPrice.high?.toString() ?: ""
-        binding.tvLow.text = barPrice.low?.toString() ?: ""
-        binding.tvClose.text = barPrice.close?.toString() ?: ""
+        val open = barPrice.open?.toString() ?: ""
+        val high = barPrice.high?.toString() ?: ""
+        val low = barPrice.low?.toString() ?: ""
+        val close = barPrice.close?.toString() ?: ""
+        val volume = data.getOrNull(1)?.prices?.value?.toAbbreviatedFormat() ?: ""
 
-        if (data.size >= 2) {
-            binding.tvVolume.text = data[1].prices.value?.toAbbreviatedFormat() ?: ""
+        binding.apply {
+            tvOpen.text = open
+            tvHigh.text = high
+            tvLow.text = low
+            tvClose.text = close
+            tvVolume.text = volume
         }
 
         val textColor = getPriceTextColor(barPrice)
@@ -178,12 +219,29 @@ class TaFragment : Fragment() {
 
     private fun observeViewModelData() = viewModel.run {
         viewModel.cryptoData.observe(viewLifecycleOwner) { symbolQuoteData ->
-            binding.textViewSymbol.text = symbolQuoteData.symbol
-            binding.textViewLastPrice.text = symbolQuoteData.lastPrice.toBigDecimal().stripTrailingZeros().toPlainString()
-            binding.textViewPriceChangePercent.text = String.format(Locale.ROOT, "%.2f%%", symbolQuoteData.priceChangePercent.toDouble())
+            with(binding) {
+                tvSymbol.text = symbolQuoteData.symbol
+                tvLastPrice.text = symbolQuoteData.lastPrice.toBigDecimal().stripTrailingZeros().toPlainString()
+                tvPriceChangePercent.text = String.format(Locale.ROOT, "%.2f%%", symbolQuoteData.priceChangePercent.toDouble())
+                tvPriceChange.text = symbolQuoteData.priceChange.toBigDecimal().stripTrailingZeros().toPlainString()
+
+                val color = when {
+                    symbolQuoteData.priceChangePercent.toDouble() > 0 -> upColor
+                    symbolQuoteData.priceChangePercent.toDouble() < 0 -> downColor
+                    else -> whiteColor
+                }
+
+                tvLastPrice.setTextColor(color)
+                tvPriceChangePercent.setTextColor(color)
+                tvPriceChange.setTextColor(color)
+            }
         }
 
         viewModel.seriesBarData.observe(viewLifecycleOwner) { barData ->
+            if (!isChartReady) {
+                return@observe
+            }
+            binding.progressBar.visibility = View.INVISIBLE
             if (candlestickSeries == null) {
                 addCandleSeries(barData)
             } else {
@@ -192,6 +250,10 @@ class TaFragment : Fragment() {
         }
 
         viewModel.seriesHistogramData.observe(viewLifecycleOwner) { histogramData ->
+            if (!isChartReady) {
+                return@observe
+            }
+            binding.progressBar.visibility = View.INVISIBLE
             if (histogramSeries == null) {
                 addHistogramSeries(histogramData)
             } else {

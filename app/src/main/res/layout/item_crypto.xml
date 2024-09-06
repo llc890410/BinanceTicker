@@ -6,7 +6,7 @@
     android:padding="8dp">
 
     <TextView
-        android:id="@+id/textViewSymbol"
+        android:id="@+id/tvSymbol"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:singleLine="true"
@@ -17,7 +17,7 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
-        android:id="@+id/textViewLastPrice"
+        android:id="@+id/tvLastPrice"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Last Price"
@@ -27,7 +27,7 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
-        android:id="@+id/textViewPriceChangePercent"
+        android:id="@+id/tvPriceChangePercent"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Change %"

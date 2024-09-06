@@ -29,13 +29,13 @@ class CryptoListAdapter(
     ) : RecyclerView.ViewHolder(binding.root) {
 
         fun bind(data: SymbolQuoteData) {
-            binding.textViewSymbol.text = data.symbol
+            binding.tvSymbol.text = data.symbol
 
             val formattedLastPrice = data.lastPrice.toBigDecimal().stripTrailingZeros().toPlainString()
-            binding.textViewLastPrice.text = formattedLastPrice
+            binding.tvLastPrice.text = formattedLastPrice
 
             val formattedPercent = String.format(Locale.ROOT, "%.2f", data.priceChangePercent.toDouble()) + "%"
-            binding.textViewPriceChangePercent.text = formattedPercent
+            binding.tvPriceChangePercent.text = formattedPercent
 
             binding.root.setOnClickListener {
                 onItemClicked(data)
