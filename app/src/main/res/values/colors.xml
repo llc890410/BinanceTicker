@@ -2,4 +2,11 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+
+    <color name="chart_up_color">#CC009688</color> <!-- ARGB = 204, 0, 150, 136 -->
+    <color name="chart_down_color">#CCFF5252</color> <!-- ARGB = 204, 255, 82, 82 -->
+    <color name="chart_white_color">#D1D4DC</color>
+    <color name="chart_background_color">#131722</color>
+    <color name="chart_vertical_grid_color">#002A2E39</color> <!-- 全透明灰色 -->
+    <color name="chart_horizontal_grid_color">#992A2E39</color> <!-- 半透明灰色 -->
 </resources>

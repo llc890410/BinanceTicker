@@ -1,12 +1,13 @@
 package com.example.binanceticker.presentation.view
 
-import android.graphics.Color
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.viewModels
+import com.example.binanceticker.R
 import com.example.binanceticker.databinding.FragmentTaBinding
 import com.example.binanceticker.domain.model.ChartData
 import com.example.binanceticker.presentation.viewmodel.TaViewModel
@@ -18,11 +19,15 @@ import com.tradingview.lightweightcharts.api.options.models.HistogramSeriesOptio
 import com.tradingview.lightweightcharts.api.options.models.PriceScaleMargins
 import com.tradingview.lightweightcharts.api.options.models.PriceScaleOptions
 import com.tradingview.lightweightcharts.api.options.models.candlestickSeriesOptions
+import com.tradingview.lightweightcharts.api.options.models.crosshairOptions
 import com.tradingview.lightweightcharts.api.options.models.gridLineOptions
 import com.tradingview.lightweightcharts.api.options.models.gridOptions
 import com.tradingview.lightweightcharts.api.options.models.layoutOptions
 import com.tradingview.lightweightcharts.api.options.models.priceScaleMargins
 import com.tradingview.lightweightcharts.api.options.models.priceScaleOptions
+import com.tradingview.lightweightcharts.api.series.enums.CrosshairMode
+import com.tradingview.lightweightcharts.api.series.models.BarPrice
+import com.tradingview.lightweightcharts.api.series.models.BarPrices
 import com.tradingview.lightweightcharts.api.series.models.PriceFormat
 import com.tradingview.lightweightcharts.api.series.models.PriceScaleId
 import com.tradingview.lightweightcharts.view.ChartsView
@@ -41,6 +46,13 @@ class TaFragment : Fragment() {
     private var histogramSeries: SeriesApi? = null
 
     private val viewModel: TaViewModel by viewModels()
+
+    private val upColor by lazy { ContextCompat.getColor(requireContext(), R.color.chart_up_color) }
+    private val downColor by lazy { ContextCompat.getColor(requireContext(), R.color.chart_down_color) }
+    private val whiteColor by lazy { ContextCompat.getColor(requireContext(), R.color.chart_white_color) }
+    private val chartBackgroundColor by lazy { ContextCompat.getColor(requireContext(), R.color.chart_background_color) }
+    private val chartVerticalGridColor by lazy { ContextCompat.getColor(requireContext(), R.color.chart_vertical_grid_color) }
+    private val chartHorizontalGridColor by lazy { ContextCompat.getColor(requireContext(), R.color.chart_horizontal_grid_color) }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -64,23 +76,31 @@ class TaFragment : Fragment() {
     }
 
     private fun setupChartView() {
-        binding.progressBar.visibility = View.VISIBLE
-        binding.chartsView.visibility = View.INVISIBLE
+        updateChartViewVisibility(isLoading = true)
+        binding.clBarInfo.visibility = View.INVISIBLE
 
         binding.chartsView.subscribeOnChartStateChange { state ->
             when (state) {
-                is ChartsView.State.Preparing -> {
-                    binding.progressBar.visibility = View.VISIBLE
-                    binding.chartsView.visibility = View.INVISIBLE
-                }
-                is ChartsView.State.Ready -> {
-                    binding.progressBar.visibility = View.INVISIBLE
-                    binding.chartsView.visibility = View.VISIBLE
-                }
+                is ChartsView.State.Preparing -> updateChartViewVisibility(isLoading = true)
+                is ChartsView.State.Ready -> updateChartViewVisibility(isLoading = false)
                 is ChartsView.State.Error -> {
-                    binding.progressBar.visibility = View.INVISIBLE
-                    binding.chartsView.visibility = View.VISIBLE
+                    updateChartViewVisibility(isLoading = false)
                     Timber.e("Chart error: ${state.exception}")
+                }
+            }
+        }
+
+        chartApi.subscribeCrosshairMove { param ->
+            if (param.point == null) { //用這個判斷是否進入查價模式
+                binding.clBarInfo.visibility = View.INVISIBLE
+            } else {
+                binding.clBarInfo.visibility = View.VISIBLE
+            }
+            param.seriesData?.let { data ->
+                if (data.isEmpty()) {
+                    clearPriceInfo()
+                } else {
+                    updatePriceInfo(data)
                 }
             }
         }
@@ -88,10 +108,55 @@ class TaFragment : Fragment() {
         chartApi.applyChartOptions()
     }
 
+    private fun updateChartViewVisibility(isLoading: Boolean) {
+        binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.INVISIBLE
+        binding.chartsView.visibility = if (isLoading) View.INVISIBLE else View.VISIBLE
+    }
+
+    private fun clearPriceInfo() {
+        listOf(binding.tvOpen, binding.tvHigh, binding.tvLow, binding.tvClose, binding.tvVolume).forEach {
+            it.text = "Ø"
+            it.setTextColor(whiteColor)
+        }
+    }
+
+    private fun updatePriceInfo(data: List<BarPrices>) {
+        val barPrice = data.first().prices
+        binding.tvOpen.text = barPrice.open?.toString() ?: ""
+        binding.tvHigh.text = barPrice.high?.toString() ?: ""
+        binding.tvLow.text = barPrice.low?.toString() ?: ""
+        binding.tvClose.text = barPrice.close?.toString() ?: ""
+
+        if (data.size >= 2) {
+            binding.tvVolume.text = data[1].prices.value?.toString() ?: ""
+        }
+
+        val textColor = getPriceTextColor(barPrice)
+        listOf(binding.tvOpen, binding.tvHigh, binding.tvLow, binding.tvClose, binding.tvVolume).forEach {
+            it.setTextColor(textColor)
+        }
+    }
+
+    private fun getPriceTextColor(barPrice: BarPrice): Int {
+        return when {
+            barPrice.close != null && barPrice.open != null -> {
+                when {
+                    barPrice.close!! > barPrice.open!! -> upColor
+                    barPrice.close!! < barPrice.open!! -> downColor
+                    else -> whiteColor
+                }
+            }
+            else -> whiteColor
+        }
+    }
+
     private fun ChartApi.applyChartOptions() = applyOptions {
+        crosshair = crosshairOptions {
+            mode = CrosshairMode.NORMAL // 普通模式 不會自動對齊K線
+        }
         layout = layoutOptions {
-            background = SolidColor(Color.parseColor("#131722").toIntColor())
-            textColor = Color.parseColor("#d1d4dc").toIntColor()
+            background = SolidColor(chartBackgroundColor.toIntColor())
+            textColor = whiteColor.toIntColor()
         }
         rightPriceScale = priceScaleOptions {
             scaleMargins = priceScaleMargins {
@@ -102,10 +167,10 @@ class TaFragment : Fragment() {
         }
         grid = gridOptions {
             vertLines = gridLineOptions {
-                color = Color.argb(0, 42, 46, 57).toIntColor()
+                color = chartVerticalGridColor.toIntColor()
             }
             horzLines = gridLineOptions {
-                color = Color.argb(153, 42, 46, 57).toIntColor()
+                color = chartHorizontalGridColor.toIntColor()
             }
         }
     }
@@ -138,8 +203,8 @@ class TaFragment : Fragment() {
         chartApi.addCandlestickSeries(
             options = candlestickSeriesOptions {
                 priceScaleId = PriceScaleId.RIGHT
-                upColor = Color.argb(204, 0, 150, 136).toIntColor()
-                downColor = Color.argb(204, 255, 82, 82).toIntColor()
+                upColor = this@TaFragment.upColor.toIntColor()
+                downColor = this@TaFragment.downColor.toIntColor()
             },
             onSeriesCreated = { series ->
                 candlestickSeries = series

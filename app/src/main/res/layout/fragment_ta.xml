@@ -66,6 +66,124 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/constraintLayoutQuote" />
 
+    <TextView
+        android:id="@+id/textViewBarInfo"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@color/white"
+        app:layout_constraintStart_toStartOf="@id/charts_view"
+        app:layout_constraintTop_toTopOf="@id/charts_view" />
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/clBarInfo"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:padding="8dp"
+        app:layout_constraintStart_toStartOf="@id/charts_view"
+        app:layout_constraintTop_toTopOf="@id/charts_view">
+
+        <TextView
+            android:id="@+id/tvOpenTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="開 = "
+            android:textColor="@color/chart_white_color"
+            android:textSize="14sp"
+            app:layout_constraintStart_toStartOf="@id/clBarInfo"
+            app:layout_constraintTop_toTopOf="@id/clBarInfo" />
+
+        <TextView
+            android:id="@+id/tvOpen"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/chart_white_color"
+            android:textSize="14sp"
+            app:layout_constraintBottom_toBottomOf="@id/tvOpenTitle"
+            app:layout_constraintStart_toEndOf="@id/tvOpenTitle"
+            app:layout_constraintTop_toTopOf="@id/tvOpenTitle" />
+
+        <TextView
+            android:id="@+id/tvHighTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="高 = "
+            android:textColor="@color/chart_white_color"
+            android:textSize="14sp"
+            app:layout_constraintStart_toStartOf="@id/tvOpenTitle"
+            app:layout_constraintTop_toBottomOf="@id/tvOpenTitle" />
+
+        <TextView
+            android:id="@+id/tvHigh"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/chart_white_color"
+            android:textSize="14sp"
+            app:layout_constraintBottom_toBottomOf="@id/tvHighTitle"
+            app:layout_constraintStart_toEndOf="@id/tvHighTitle"
+            app:layout_constraintTop_toTopOf="@id/tvHighTitle" />
+
+        <TextView
+            android:id="@+id/tvLowTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="低 = "
+            android:textColor="@color/chart_white_color"
+            android:textSize="14sp"
+            app:layout_constraintStart_toStartOf="@id/tvHighTitle"
+            app:layout_constraintTop_toBottomOf="@id/tvHighTitle" />
+
+        <TextView
+            android:id="@+id/tvLow"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/chart_white_color"
+            android:textSize="14sp"
+            app:layout_constraintBottom_toBottomOf="@id/tvLowTitle"
+            app:layout_constraintStart_toEndOf="@id/tvLowTitle"
+            app:layout_constraintTop_toTopOf="@id/tvLowTitle" />
+
+        <TextView
+            android:id="@+id/tvCloseTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="收 = "
+            android:textColor="@color/chart_white_color"
+            android:textSize="14sp"
+            app:layout_constraintStart_toStartOf="@id/tvLowTitle"
+            app:layout_constraintTop_toBottomOf="@id/tvLowTitle" />
+
+        <TextView
+            android:id="@+id/tvClose"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/chart_white_color"
+            android:textSize="14sp"
+            app:layout_constraintBottom_toBottomOf="@id/tvCloseTitle"
+            app:layout_constraintStart_toEndOf="@id/tvCloseTitle"
+            app:layout_constraintTop_toTopOf="@id/tvCloseTitle" />
+
+        <TextView
+            android:id="@+id/tvVolumeTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="量 = "
+            android:textColor="@color/chart_white_color"
+            android:textSize="14sp"
+            app:layout_constraintStart_toStartOf="@id/tvCloseTitle"
+            app:layout_constraintTop_toBottomOf="@id/tvCloseTitle" />
+
+        <TextView
+            android:id="@+id/tvVolume"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/chart_white_color"
+            android:textSize="14sp"
+            app:layout_constraintBottom_toBottomOf="@id/tvVolumeTitle"
+            app:layout_constraintStart_toEndOf="@id/tvVolumeTitle"
+            app:layout_constraintTop_toTopOf="@id/tvVolumeTitle" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
     <ProgressBar
         android:id="@+id/progressBar"
         android:layout_width="wrap_content"
