@@ -11,6 +11,7 @@ import com.example.binanceticker.R
 import com.example.binanceticker.databinding.FragmentTaBinding
 import com.example.binanceticker.domain.model.ChartData
 import com.example.binanceticker.presentation.viewmodel.TaViewModel
+import com.example.binanceticker.utils.NumberFormatUtil.toAbbreviatedFormat
 import com.tradingview.lightweightcharts.api.chart.models.color.surface.SolidColor
 import com.tradingview.lightweightcharts.api.chart.models.color.toIntColor
 import com.tradingview.lightweightcharts.api.interfaces.ChartApi
@@ -128,7 +129,7 @@ class TaFragment : Fragment() {
         binding.tvClose.text = barPrice.close?.toString() ?: ""
 
         if (data.size >= 2) {
-            binding.tvVolume.text = data[1].prices.value?.toString() ?: ""
+            binding.tvVolume.text = data[1].prices.value?.toAbbreviatedFormat() ?: ""
         }
 
         val textColor = getPriceTextColor(barPrice)
