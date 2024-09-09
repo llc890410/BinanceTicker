@@ -6,11 +6,14 @@ import androidx.fragment.app.viewModels
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
+import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.binanceticker.R
 import com.example.binanceticker.databinding.FragmentCryptoListBinding
 import com.example.binanceticker.presentation.state.UiState
 import com.example.binanceticker.presentation.viewmodel.CryptoViewModel
@@ -49,6 +52,12 @@ class CryptoListFragment : Fragment() {
         binding.recyclerViewCryptoList.apply {
             adapter = cryptoListAdapter
             layoutManager = LinearLayoutManager(requireContext())
+
+            val dividerItemDecoration = DividerItemDecoration(context, (layoutManager as LinearLayoutManager).orientation)
+            ContextCompat.getDrawable(context, R.drawable.divider)?.let {
+                dividerItemDecoration.setDrawable(it)
+            }
+            addItemDecoration(dividerItemDecoration)
         }
     }
 

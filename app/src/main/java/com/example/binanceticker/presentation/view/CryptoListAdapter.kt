@@ -2,9 +2,12 @@ package com.example.binanceticker.presentation.view
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.core.content.ContentProviderCompat.requireContext
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import com.example.binanceticker.R
 import com.example.binanceticker.databinding.ItemCryptoBinding
 import com.example.binanceticker.domain.model.SymbolQuoteData
 import java.util.Locale
@@ -36,6 +39,18 @@ class CryptoListAdapter(
 
             val formattedPercent = String.format(Locale.ROOT, "%.2f", data.priceChangePercent.toDouble()) + "%"
             binding.tvPriceChangePercent.text = formattedPercent
+
+            val colorRes = when {
+                data.priceChangePercent.toDouble() > 0 -> R.color.chart_up_color
+                data.priceChangePercent.toDouble() < 0 -> R.color.chart_down_color
+                else -> R.color.chart_white_color
+            }
+            binding.tvLastPrice.setTextColor(
+                ContextCompat.getColor(binding.root.context, colorRes)
+            )
+            binding.tvPriceChangePercent.setTextColor(
+                ContextCompat.getColor(binding.root.context, colorRes)
+            )
 
             binding.root.setOnClickListener {
                 onItemClicked(data)
